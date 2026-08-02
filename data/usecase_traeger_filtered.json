@@ -1,0 +1,12 @@
+{
+  "seed_class": "IfcBeam",
+  "concept": "Traegermaterial",
+  "concept_question": "Ist der Traeger aus Stahl (Stahltraeger) oder aus Stahlbeton (Stahlbetontraeger)?",
+  "categories": ["Stahltraeger", "Stahlbetontraeger"],
+  "attribute_paths": [
+    "$.schema.Tekla Common.Profile",
+    "$.schema.ArchiCADProperties.Building Material / Profile",
+    "$.schema.Sonstige.Familie und Typ"
+  ],
+  "_comment": "Faire Wiederholung nach Kritik: Reference-Feld entfernt (fast nur Positionsnummern, kein Materialbezug). Nur Instanzen mit Signal in mind. einem der 3 verbleibenden Felder. Ground Truth manuell aus eindeutigen Fachbegriffen abgeleitet (siehe ground_truth_traeger_filtered.json), mehrdeutige Faelle (Schraubengroessen M16/M20 etc., reine Dekor-/Massangaben) bewusst ausgeschlossen statt geraten."
+}

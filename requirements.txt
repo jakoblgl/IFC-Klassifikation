@@ -1,0 +1,9 @@
+ifcopenshell
+streamlit==1.50.0
+pywebview
+pandas
+
+# Nur fuer das optionale Cloud-Backend (llm_client.ClaudeClient) noetig -
+# ohne API-Key/ohne "Claude API (Cloud)"-Auswahl in der Seitenleiste bleibt
+# das Paket ungenutzt, das lokale Ollama-Backend funktioniert auch ohne.
+anthropic

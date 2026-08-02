@@ -1,0 +1,10 @@
+{
+  "seed_class": "IfcWall",
+  "concept": "Tragende Funktion",
+  "concept_question": "Ist das Bauteil tragend oder nicht tragend?",
+  "categories": ["tragend", "nicht tragend"],
+  "attribute_paths": [
+    "$.schema.Pset_WallCommon.LoadBearing"
+  ],
+  "_comment": "Fuer die GUI-Vorlage: IsExternal gegenueber usecase_tragend_ifcnet.json entfernt, da auch Innenwaende tragend sein koennen und das Attribut damit kein sinnvolles Indiz fuer 'tragend' ist. usecase_tragend_ifcnet.json bleibt unveraendert, da run_ifcnet_walls.py und die im Text zitierten Auswertungen genau diese Datei referenzieren."
+}
