@@ -16,6 +16,20 @@ import urllib.request
 
 
 class OllamaClient:
+    # Wie viele Kombinationen classify_combinations_v3 gleichzeitig an dieses
+    # Backend schickt (siehe dortiger Aufruf in gui_app.py). Empirisch
+    # ermittelt (2026-08-02, Testsystem ohne dedizierte GPU, 8 CPU-Kerne):
+    # 2 gleichzeitige Aufrufe brachten einen Faktor von ~3.7x gegenueber
+    # sequentiell, 4 brachten GEGENUEBER 2 keinen weiteren Gewinn mehr (die
+    # Hardware war dann bereits ausgelastet). Dieser Wert ist NICHT
+    # allgemeingueltig, sondern maschinenspezifisch - bei staerkerer lokaler
+    # Hardware (v.a. mit dedizierter GPU) kann ein hoeherer Wert schneller
+    # sein, muss aber genauso empirisch neu ermittelt werden (sequentiell
+    # vs. parallel mit unterschiedlichen Werten timen), nicht geraten
+    # werden - zu hoch gewaehlt kann bei begrenztem Arbeitsspeicher/VRAM den
+    # Rechner ausbremsen statt beschleunigen.
+    RECOMMENDED_MAX_WORKERS = 2
+
     def __init__(self, model="qwen2.5:7b-instruct", host="http://localhost:11434", num_ctx=16384):
         self.model = model
         self.host = host
@@ -47,6 +61,17 @@ class ClaudeClient:
     # klassifizierten Kombinationen dieses Laufs verwerfen (siehe gui_app.py,
     # der try/except um classify_combinations_v3).
     MAX_RETRIES = 5
+
+    # Wie bei OllamaClient.RECOMMENDED_MAX_WORKERS, aber noch NICHT
+    # empirisch getestet - anders als bei lokaler Hardware gibt es hier kein
+    # Ressourcen-Erschoepfungsrisiko (die Last liegt bei Anthropics Servern,
+    # nicht auf diesem Rechner; ein zu hoher Wert fuehrt hoechstens zu
+    # 429-Fehlern, die MAX_RETRIES oben bereits abfaengt) - ein hoeherer
+    # Wert als bei Ollama ist daher plausibel, aber ohne echten Test mit
+    # einem eigenen API-Key/Tier reine Vermutung. Bei Bedarf genau wie beim
+    # Ollama-Benchmark testen (sequentiell vs. parallel mit z.B. 2/4/8/16
+    # Workern timen) und den ermittelten Wert hier eintragen.
+    RECOMMENDED_MAX_WORKERS = 2
 
     def __init__(self, model="claude-sonnet-5", api_key=None):
         import anthropic

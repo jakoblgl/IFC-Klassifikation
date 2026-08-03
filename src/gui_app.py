@@ -1207,6 +1207,7 @@ if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
                         cat2, ev2, basis2 = classify_combinations_v3(
                             client, has_signal, uc["concept"], uc["concept_question"], uc["categories"],
                             on_progress=_update_progress,
+                            max_workers=client.RECOMMENDED_MAX_WORKERS,
                         )
                         combo_to_category.update(cat2)
                         combo_to_evidence.update(ev2)
@@ -1327,6 +1328,7 @@ if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
                             client, combinations,
                             uc["concept"], uc["concept_question"], uc["categories"],
                             on_progress=_update_progress,
+                            max_workers=client.RECOMMENDED_MAX_WORKERS,
                         )
                     except Exception as exc:
                         st.error(f"Namenssuche fehlgeschlagen: {exc}\n\nLäuft Ollama noch?")

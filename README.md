@@ -93,13 +93,26 @@ Datenschutzanforderungen bleibt Ollama die vorgesehene Wahl.
 Für jede *einzigartige* Kombination der konfigurierten Attributwerte macht
 das Tool einen eigenen Aufruf an das LLM (nicht pro Bauteil-Instanz, aber
 z.B. bei 40 unterschiedlichen Attribut-Kombinationen entsprechend 40
-Aufrufe). Das lokale Modell läuft ohne dedizierte GPU spürbar langsamer als
-eine Cloud-API. Bei vielen unterschiedlichen Kombinationen kann ein einziger
-Anwendungsfall daher durchaus mehrere Minuten dauern.
+Aufrufe). Bei vielen unterschiedlichen Kombinationen kann ein einziger
+Anwendungsfall daher durchaus mehrere Minuten dauern – besonders mit dem
+lokalen Ollama-Modell ohne dedizierte GPU.
 
-Diese Aufrufe laufen dabei zu zweit gleichzeitig statt strikt nacheinander
-(unabhängige Einzelanfragen, kein gemeinsamer Prompt – das würde die
-Genauigkeit verschlechtern, siehe Kommentar in `classify_generic_v3.py`).
+Diese Aufrufe laufen dabei standardmäßig zu zweit gleichzeitig statt strikt
+nacheinander (unabhängige Einzelanfragen, kein gemeinsamer Prompt – das
+würde die Genauigkeit verschlechtern, siehe Kommentar in
+`classify_generic_v3.py`). Dieser Wert (2) ist für das lokale Ollama-Backend
+empirisch auf einem Testsystem ohne dedizierte GPU ermittelt worden – auf
+leistungsfähigerer Hardware (v.a. mit GPU) kann ein höherer Wert schneller
+sein. Für die Cloud-API Claude wurde noch kein optimaler Wert ermittelt
+(hängt vom eigenen Anthropic-Account-Tier/Rate-Limit ab) – hier gilt
+vorsorglich derselbe konservative Standardwert.
+
+**Anpassbar in `src/llm_client.py`**: `RECOMMENDED_MAX_WORKERS` als
+Klassenattribut bei `OllamaClient` bzw. `ClaudeClient`, jeweils getrennt
+einstellbar. Nicht blind hochsetzen – am besten wie beim ursprünglichen Test
+selbst messen (sequentiell vs. parallel mit unterschiedlichen Werten
+timen): ein zu hoher Wert kann bei begrenztem Arbeitsspeicher/VRAM eher
+ausbremsen als beschleunigen.
 
 ## Problembehebung
 
