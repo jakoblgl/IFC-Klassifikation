@@ -3,3 +3,10 @@ maxUploadSize = 2000
 
 [browser]
 gatherUsageStats = false
+
+[client]
+# Blendet den "Veroeffentlichen"(Deploy)-Button und das Hamburger-Menue aus -
+# diese App laeuft als lokales Desktop-Tool (pywebview), Streamlit Cloud-
+# Deploy ist hier nie relevant und wuerde bei Interviewpartnern nur
+# Verwirrung stiften.
+toolbarMode = "minimal"

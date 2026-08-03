@@ -1402,32 +1402,3 @@ if st.session_state.get("result_rows"):
                 st.success("Gespeichert:\n" + "\n".join(written))
             except OSError as exc:
                 st.error(f"Konnte nicht speichern: {exc}")
-
-    with st.expander("Alternativ: direkt über den Browser herunterladen"):
-        st.download_button(
-            "CSV herunterladen (alle Anwendungsfälle)", csv_bytes,
-            file_name="klassifikation.csv", mime="text/csv",
-        )
-        if st.button("Als IFC mit Klassifikation exportieren (Browser-Download)"):
-            out_dir = os.path.join(st.session_state.tmp_dir, "enriched")
-            written = []
-            for entry in st.session_state.usecase_results:
-                files = enrich_ifc_files(
-                    entry["classification"], entry["metadata"],
-                    classification_system_name=entry["usecase"]["concept"],
-                    out_dir=out_dir,
-                )
-                for f in files:
-                    base, ext = os.path.splitext(f)
-                    slug = "".join(c if c.isalnum() else "_" for c in entry["usecase"]["concept"])
-                    new_path = f"{base}_{slug}{ext}"
-                    os.replace(f, new_path)
-                    written.append(new_path)
-            st.session_state.enriched_files = written
-
-        for path in st.session_state.get("enriched_files", []):
-            with open(path, "rb") as f:
-                st.download_button(
-                    f"{os.path.basename(path)} herunterladen", f.read(),
-                    file_name=os.path.basename(path), key=f"dl_{path}",
-                )
