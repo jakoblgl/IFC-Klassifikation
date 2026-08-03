@@ -39,14 +39,21 @@ nötig außer Python und Ollama.
 
 ## Datenschutz
 
-Das Tool läuft ausschließlich lokal auf diesem Rechner (Server nur auf
-127.0.0.1) – IFC-Dateien werden nur von der Festplatte gelesen, nichts wird
-hochgeladen. Die Klassifikation selbst läuft komplett offline über das lokal
-installierte Ollama-Modell. Einzige Ausnahme: eine optionale Anreicherung mit
-Definitionen aus dem buildingSMART Data Dictionary (bSDD) beim "Attributpfade
-vorschlagen lassen". dabei wird nur ein generischer Klassenname wie `IfcWall` 
-übertragen, keine Projekt- oder Bauteildaten. Ist bSDD nicht erreichbar, 
-funktioniert das Tool unverändert weiter.
+**Mit dem Standard-Backend Ollama** läuft das Tool ausschließlich lokal auf
+diesem Rechner (Server nur auf 127.0.0.1) – IFC-Dateien werden nur von der
+Festplatte gelesen, nichts wird hochgeladen. Die Klassifikation selbst läuft
+komplett offline über das lokal installierte Ollama-Modell. Einzige
+Ausnahme: eine optionale Anreicherung mit Definitionen aus dem buildingSMART
+Data Dictionary (bSDD) beim "Attributpfade vorschlagen lassen" – dabei wird
+nur ein generischer Klassenname wie `IfcWall` übertragen, keine Projekt-
+oder Bauteildaten. Ist bSDD nicht erreichbar, funktioniert das Tool
+unverändert weiter.
+
+**Wird stattdessen das Cloud-Backend Claude API gewählt** (siehe
+"LLM-Backend" unten), gilt das oben Gesagte nicht mehr: dann werden die
+tatsächlichen Attributwerte der zu klassifizierenden Bauteile an die
+Anthropic-API übertragen. Für Projekte mit entsprechenden
+Datenschutzanforderungen bleibt Ollama die vorgesehene Wahl.
 
 ## Bedienung – kurzer Ablauf
 
