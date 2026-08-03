@@ -24,10 +24,10 @@ diese Oberfläche ist reine Präsentationsschicht.
   dem klassifiziert wird:
   1. Installieren: https://ollama.com/download
   2. Einmalig das benötigte Modell laden (ca. 4,7 GB):
-     `ollama pull qwen2.5:7b-instruct`
+     `ollama pull qwen2.5:7b-instruct` im Terminal ausführen.
 
   Alternativ lässt sich in der Oberfläche auf die Cloud-API von Claude
-  umschalten (siehe unten) – dann ist kein Ollama nötig, dafür ein eigener
+  umschalten (siehe unten). Dann ist kein Ollama nötig, dafür ein eigener
   Anthropic-API-Key.
 
 ## Start
@@ -64,35 +64,34 @@ umschalten:
 - **Ollama (lokal)** – Standard, kostenlos, läuft komplett offline (siehe
   Datenschutz oben). Spürbar langsamer, siehe vorheriger Abschnitt.
 - **Claude API (Cloud)** – erfordert einen eigenen Anthropic-API-Key (Feld
-  erscheint nach der Auswahl). Deutlich schneller, aber die Attributwerte
-  der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen.
+  erscheint nach der Auswahl). Vermutlich deutlich schneller (noch nicht getestet), 
+  aber die Attributwerte der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen.
   Für Projekte mit entsprechenden Datenschutzanforderungen bleibt Ollama
   die vorgesehene Wahl. Der Key wird nur für die laufende Sitzung im
   Arbeitsspeicher gehalten, nicht gespeichert.
 
 ## Datenschutz
 
-**Mit dem Standard-Backend Ollama** läuft das Tool ausschließlich lokal auf
-diesem Rechner (Server nur auf 127.0.0.1) – IFC-Dateien werden nur von der
+**Mit dem Standard-Backend Ollama** läuft das Tool ausschließlich lokal 
+(Server nur auf 127.0.0.1). IFC-Dateien werden nur von der
 Festplatte gelesen, nichts wird hochgeladen. Die Klassifikation selbst läuft
 komplett offline über das lokal installierte Ollama-Modell. Einzige
 Ausnahme: eine optionale Anreicherung mit Definitionen aus dem buildingSMART
-Data Dictionary (bSDD) beim "Attributpfade vorschlagen lassen" – dabei wird
+Data Dictionary (bSDD) beim "Attributpfade vorschlagen lassen". dabei wird
 nur ein generischer Klassenname wie `IfcWall` übertragen, keine Projekt-
 oder Bauteildaten. Ist bSDD nicht erreichbar, funktioniert das Tool
 unverändert weiter.
 
 **Wird stattdessen das Cloud-Backend Claude API gewählt** (siehe
-"LLM-Backend"), gilt das oben Gesagte nicht mehr: dann werden die
-tatsächlichen Attributwerte der zu klassifizierenden Bauteile an die
-Anthropic-API übertragen. Für Projekte mit entsprechenden
+"LLM-Backend"), werden die tatsächlichen Attributwerte der zu klassifizierenden 
+Bauteile an die Anthropic-API übertragen. Für Projekte mit entsprechenden
 Datenschutzanforderungen bleibt Ollama die vorgesehene Wahl.
 
 ## Warum dauert die Klassifikation manchmal lange?
 
 Für jede *einzigartige* Kombination der konfigurierten Attributwerte macht
 das Tool einen eigenen Aufruf an das LLM (nicht pro Bauteil-Instanz, aber
-z.B. bei 40 unterschiedlichen Attribut-Kombinationen entsprechend 40
+z.B. bei 40 unterschiedlichen Attributwerte-Kombinationen entsprechend 40
 Aufrufe). Bei vielen unterschiedlichen Kombinationen kann ein einziger
 Anwendungsfall daher durchaus mehrere Minuten dauern – besonders mit dem
 lokalen Ollama-Modell ohne dedizierte GPU.
@@ -104,7 +103,7 @@ würde die Genauigkeit verschlechtern, siehe Kommentar in
 empirisch auf einem Testsystem ohne dedizierte GPU ermittelt worden – auf
 leistungsfähigerer Hardware (v.a. mit GPU) kann ein höherer Wert schneller
 sein. Für die Cloud-API Claude wurde noch kein optimaler Wert ermittelt
-(hängt vom eigenen Anthropic-Account-Tier/Rate-Limit ab) – hier gilt
+(hängt vom eigenen Anthropic-Account-Tier/Rate-Limit ab). Hier gilt
 vorsorglich derselbe konservative Standardwert.
 
 **Anpassbar in `src/llm_client.py`**: `RECOMMENDED_MAX_WORKERS` als
