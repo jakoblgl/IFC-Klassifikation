@@ -8,6 +8,12 @@ Bauteils gegen die gewählten Zielkategorien abgleicht. Teil einer
 Masterarbeit; die eigentliche Klassifikationslogik ist in `src/` beschrieben,
 diese Oberfläche ist reine Präsentationsschicht.
 
+## Herunterladen
+
+- **Ohne Git**: oben auf dieser Seite auf den grünen "Code"-Button klicken →
+  "Download ZIP" → die Datei an einem beliebigen Ort entpacken.
+- **Mit Git**: `git clone https://github.com/jakoblgl/IFC-Klassifikation.git`
+
 ## Voraussetzungen
 
 - Windows
