@@ -37,10 +37,10 @@ Das Tool läuft ausschließlich lokal auf diesem Rechner (Server nur auf
 127.0.0.1) – IFC-Dateien werden nur von der Festplatte gelesen, nichts wird
 hochgeladen. Die Klassifikation selbst läuft komplett offline über das lokal
 installierte Ollama-Modell. Einzige Ausnahme: eine optionale Anreicherung mit
-Definitionen aus dem buildingSMART Data Dictionary (bSDD) – dabei wird nur ein
-generischer Klassenname wie `IfcWall` übertragen, keine Projekt- oder
-Bauteildaten. Ist bSDD nicht erreichbar, funktioniert das Tool unverändert
-weiter.
+Definitionen aus dem buildingSMART Data Dictionary (bSDD) beim "Attributpfade
+vorschlagen lassen". dabei wird nur ein generischer Klassenname wie `IfcWall` 
+übertragen, keine Projekt- oder Bauteildaten. Ist bSDD nicht erreichbar, 
+funktioniert das Tool unverändert weiter.
 
 ## Bedienung – kurzer Ablauf
 
@@ -53,7 +53,7 @@ weiter.
    Attributpfade lassen sich auch per Knopfdruck vom LLM vorschlagen lassen.
 3. **Klassifizieren** – Button "Alle Anwendungsfälle klassifizieren".
    **Das kann je nach Anzahl unterschiedlicher Attribut-Kombinationen mehrere
-   Minuten dauern** – siehe unten, das ist normal.
+   Minuten dauern**.
 4. **Ergebnis** – Tabelle ansehen, als CSV oder als um die Klassifikation
    angereicherte IFC-Datei speichern bzw. herunterladen.
 
@@ -67,17 +67,12 @@ Für jede *einzigartige* Kombination der konfigurierten Attributwerte macht
 das Tool einen eigenen Aufruf an das LLM (nicht pro Bauteil-Instanz, aber
 z.B. bei 40 unterschiedlichen Attribut-Kombinationen entsprechend 40
 Aufrufe). Das lokale Modell läuft ohne dedizierte GPU spürbar langsamer als
-eine Cloud-API – bei vielen unterschiedlichen Kombinationen kann ein einziger
-Anwendungsfall daher durchaus mehrere Minuten dauern. Kein Fehler, nur
-Geduld.
+eine Cloud-API. Bei vielen unterschiedlichen Kombinationen kann ein einziger
+Anwendungsfall daher durchaus mehrere Minuten dauern.
 
 Diese Aufrufe laufen dabei zu zweit gleichzeitig statt strikt nacheinander
 (unabhängige Einzelanfragen, kein gemeinsamer Prompt – das würde die
 Genauigkeit verschlechtern, siehe Kommentar in `classify_generic_v3.py`).
-Per Benchmark gegen die lokale Ollama-Instanz auf dieser Hardware (keine
-dedizierte GPU) ermittelt: 2 gleichzeitige Aufrufe brachten einen Faktor von
-etwa 3,7x gegenüber rein sequentiell, mehr als 2 brachte keinen weiteren
-Gewinn (die Hardware ist dann ausgelastet).
 
 ## LLM-Backend wählen: Ollama oder Claude API
 
@@ -88,8 +83,8 @@ umschalten:
   Datenschutz oben). Spürbar langsamer, siehe vorheriger Abschnitt.
 - **Claude API (Cloud)** – erfordert einen eigenen Anthropic-API-Key (Feld
   erscheint nach der Auswahl). Deutlich schneller, aber die Attributwerte
-  der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen
-  – für Projekte mit entsprechenden Datenschutzanforderungen bleibt Ollama
+  der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen.
+  Für Projekte mit entsprechenden Datenschutzanforderungen bleibt Ollama
   die vorgesehene Wahl. Der Key wird nur für die laufende Sitzung im
   Arbeitsspeicher gehalten, nicht gespeichert.
 
