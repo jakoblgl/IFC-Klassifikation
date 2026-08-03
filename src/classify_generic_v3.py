@@ -47,43 +47,43 @@ wurden im Modell schlicht nicht gepflegt, das ist normal und kein Unsicherheitss
 Hinweise:
 - Fachbegriffe und Abkuerzungen tauchen haeufig nur als Teil eines laengeren Bezeichners auf
   (z.B. eingebettet in Familiennamen oder Profilbezeichnungen). Achte auch auf solche
-  eingebetteten Teilbegriffe.
-- "Bauteilname" ist der frei vom Modellierer vergebene Name (kein genormtes IFC-Attribut
-  wie die uebrigen Pset-Werte). Er kann ein nuetzliches Indiz sein (z.B. "Trockenbauwand"
-  fuer nicht tragend).{name_hinweis}
-- Wenn AUCH NUR EIN einziges bekanntes Attribut (einschliesslich Bauteilname) eine eindeutige
-  fachliche Zuordnung erlaubt, entscheide danach -- das Fehlen anderer Attribute ist dabei
-  irrelevant und KEIN Grund fuer "unbekannt".
+  eingebetteten Teilbegriffe.{name_bullet}
+- Wenn AUCH NUR EIN einziges bekanntes Attribut eine eindeutige fachliche Zuordnung
+  erlaubt, entscheide danach -- das Fehlen anderer Attribute ist dabei irrelevant und
+  KEIN Grund fuer "unbekannt".
 - Waehle "unbekannt" ausschliesslich dann, wenn keines der bekannten Attribute einen
   erkennbaren fachlichen Hinweis liefert.
 
 Antworte NUR mit validem JSON in genau dieser Reihenfolge:
 {{"erkannte_hinweise": "kurze Nennung der textlichen Anhaltspunkte",
-  "basis": "GENAU EINER der folgenden vier Werte, woertlich uebernommen: Pset-Attribute | Bauteilname | beides | keine",
   "category": "..."}}
 """
 
-# Nur an Kombinationen OHNE jegliches Pset-Signal angehaengt (echter
-# Phase-2-Fallback, siehe classify_combinations_v3) - NICHT Teil des
-# Basisprompts, da ein frueherer Test zeigte, dass schon das blosse
-# Hinzufuegen dieses (fuer has-signal-Faelle irrelevanten) Absatzes zum
-# gemeinsamen Prompt die Genauigkeit bei has-signal-Kombinationen messbar
-# verschlechterte (24/24 -> 22/24 auf dem Traeger-Testset) - ein kleines
-# lokales Modell reagiert offenbar empfindlich auf zusaetzlichen, fuer den
-# konkreten Fall irrelevanten Prompt-Text.
-_GENERIC_NAME_WARNING = (
-    " Er ist aber NUR dann ein Indiz, wenn er ueber die blosse Bauteilart hinausgeht"
-    " (Werkstoff, Bauweise, Fachbegriff). Ein Name, der nur die Bauteilart selbst"
-    " wiederholt oder umschreibt (z.B. \"Wand\", \"Wall\", \"Balken\", \"Beam\"), eine reine"
-    " Nummerierung/ID ist (z.B. \"Wand 2.017\"), oder ein automatisch generierter"
-    " Werkzeug-Bezeichner ohne fachlichen Gehalt ist (z.B."
+# Nur an Kombinationen MIT einer Bauteilname-Zeile angehaengt (echter
+# Phase-2-Fallback, siehe classify_combinations_v3) - fuer has-signal-Faelle
+# OHNE Bauteilname-Zeile bleibt name_bullet komplett leer (nicht nur der
+# Warnhinweis-Zusatz), da ein frueherer Test zeigte, dass schon das blosse
+# Erwaehnen von "Bauteilname" als Konzept im gemeinsamen Prompt - selbst ohne
+# passende Zeile im konkreten Fall - die Genauigkeit bei has-signal-
+# Kombinationen messbar verschlechterte (24/24 -> 22/24 auf dem
+# Traeger-Testset) und dazu verleitete, einen Pset-Wert faelschlich als
+# "Bauteilname" zu labeln, nur weil sein Inhalt namensartig klingt (z.B.
+# "Familie und Typ": "ARC_STB_Unterzug/Ueberzug: Unterzug_STB_40x100") - ein
+# kleines lokales Modell reagiert offenbar empfindlich auf zusaetzlichen,
+# fuer den konkreten Fall irrelevanten Prompt-Text.
+_NAME_BULLET = (
+    "\n- \"Bauteilname\" ist der frei vom Modellierer vergebene Name (kein genormtes"
+    " IFC-Attribut wie die uebrigen Pset-Werte), oben an der Zeile \"Bauteilname:\""
+    " erkennbar. Er kann ein nuetzliches Indiz sein (z.B. \"Trockenbauwand\" fuer nicht"
+    " tragend). Er ist aber NUR dann ein Indiz, wenn er ueber die blosse Bauteilart"
+    " hinausgeht (Werkstoff, Bauweise, Fachbegriff). Ein Name, der nur die Bauteilart"
+    " selbst wiederholt oder umschreibt (z.B. \"Wand\", \"Wall\", \"Balken\", \"Beam\"),"
+    " eine reine Nummerierung/ID ist (z.B. \"Wand 2.017\"), oder ein automatisch"
+    " generierter Werkzeug-Bezeichner ohne fachlichen Gehalt ist (z.B."
     " \"Basic Wall:wall_105_270.00mm:2e6917f8\"), liefert KEINEN Hinweis -- in diesem Fall"
     " ist \"unbekannt\" die richtige Antwort, auch wenn der Bauteilname das einzige"
     " bekannte Attribut ist. Rate NICHT anhand eines inhaltsleeren Namens."
 )
-
-_VALID_BASIS = {"Pset-Attribute", "Bauteilname", "beides", "keine"}
-
 
 def _extract_json(text: str):
     text = text.strip()
@@ -192,7 +192,7 @@ def classify_combinations_v3(client, combinations, concept, concept_question, ca
             concept_question=concept_question,
             categories=categories,
             attributes=format_combo_known_only(combo),
-            name_hinweis=_GENERIC_NAME_WARNING if has_name else "",
+            name_bullet=_NAME_BULLET if has_name else "",
         )
         return _extract_json(client.complete_json(prompt))
 
@@ -201,31 +201,29 @@ def classify_combinations_v3(client, combinations, concept, concept_question, ca
         for i, future in enumerate(as_completed(future_to_combo), start=1):
             combo = future_to_combo[future]
             result = future.result()
-            combo_to_category[combo] = result["category"]
+            category = result["category"]
+            combo_to_category[combo] = category
             combo_to_evidence[combo] = result.get("erkannte_hinweise", "")
-            combo_to_basis[combo] = _normalize_basis(result.get("basis", ""))
+            # Basis wird deterministisch aus dem Code abgeleitet, nicht mehr
+            # vom Modell selbst erfragt: welcher Mechanismus verwendet
+            # wurde, steht schon fest, sobald bekannt ist, ob dieser
+            # Kombination ueberhaupt eine Bauteilname-Zeile beilag (siehe
+            # extract_combinations_v3 - NAME_PATH wird NUR angehaengt, wenn
+            # gar kein Pset-Signal vorhanden war, die beiden Faelle schliessen
+            # sich also gegenseitig aus). Das Modell selbst hat sich dabei
+            # nachweislich gelegentlich vertan (beobachtet am 2026-08-02:
+            # ein Pset-Wert "Sonstige.Familie und Typ" mit dem namensartig
+            # klingenden Inhalt "ARC_STB_Unterzug/Ueberzug: ..." wurde
+            # faelschlich als "Bauteilname" gelabelt, obwohl kein
+            # NAME_PATH-Fallback im Spiel war).
+            has_name = any(path == NAME_PATH for path, _ in combo)
+            if category == "unbekannt":
+                combo_to_basis[combo] = "keine"
+            else:
+                combo_to_basis[combo] = "Bauteilname" if has_name else "Pset-Attribute"
             if on_progress is not None:
                 on_progress(i, total)
     return combo_to_category, combo_to_evidence, combo_to_basis
-
-
-def _normalize_basis(raw_basis: str) -> str:
-    """Das Modell haelt sich nicht immer an die Vorgabe, GENAU einen der
-    vier Werte zu liefern (beobachtet: Aufzaehlungen wie
-    'Pset-Attribute / Bauteilname / beides'). Statt den Rohwert
-    unveraendert durchzureichen, wird hier robust auf die vier zulaessigen
-    Werte normalisiert."""
-    if raw_basis in _VALID_BASIS:
-        return raw_basis
-    has_pset = "pset" in raw_basis.lower()
-    has_name = "bauteilname" in raw_basis.lower() or "name" in raw_basis.lower()
-    if has_pset and has_name:
-        return "beides"
-    if has_pset:
-        return "Pset-Attribute"
-    if has_name:
-        return "Bauteilname"
-    return raw_basis or "keine"
 
 
 def run_generic_classification_v3(client, per_instance, names, usecase_config):

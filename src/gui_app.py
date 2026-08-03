@@ -522,8 +522,8 @@ with st.sidebar:
     st.subheader(
         "LLM-Backend",
         help=(
-            "Ollama laeuft komplett lokal/offline und ist kostenlos, aber auf "
-            "diesem Rechner spuerbar langsamer als eine Cloud-API. Claude "
+            "Ollama laeuft komplett lokal/offline und ist kostenlos, aber "
+            "je nach Hardware spuerbar langsamer als eine Cloud-API. Claude "
             "schickt die Attributwerte der ausgewaehlten Bauteile zur "
             "Klassifikation an die Anthropic-API - fuer Projekte mit "
             "Datenschutzanforderungen (siehe Interviewgrundlage) bleibt "

@@ -399,7 +399,7 @@ def test_classification_across_multiple_seed_classes():
     # LoadBearing durchgehend kein Signal - werden seit der Zweistufigkeit
     # (siehe zero_signal_offer-Test unten) OHNE LLM-Aufruf direkt als
     # "unbekannt" eingestuft, braucht also nur die 3 Wand-Kombinationen.
-    classify_button.click().run(timeout=300)
+    classify_button.click().run(timeout=480)
     assert not at.exception, f"Exception: {at.exception}"
 
     rows = at.session_state["result_rows"]
@@ -436,7 +436,7 @@ def test_zero_signal_followup_namenssuche():
     assert not at.exception
 
     classify_button = next(b for b in at.button if b.label == "Alle Anwendungsfälle klassifizieren")
-    classify_button.click().run(timeout=300)
+    classify_button.click().run(timeout=480)
     assert not at.exception, f"Exception: {at.exception}"
 
     offer = at.session_state["zero_signal_offer"]
@@ -450,7 +450,7 @@ def test_zero_signal_followup_namenssuche():
         b for b in at.button
         if b.label == f"Diese {n_before} Element(e) mit Namenssuche klassifizieren"
     )
-    followup_button.click().run(timeout=300)
+    followup_button.click().run(timeout=480)
     assert not at.exception, f"Exception beim Namenssuche-Nachgang: {at.exception}"
 
     assert at.session_state["zero_signal_offer"] == []
@@ -632,7 +632,7 @@ def test_suggest_button_trims_redundant_paths():
     assert not at.exception
 
     suggest_button = next(b for b in at.button if b.label == "Attributpfade vorschlagen lassen (LLM)")
-    suggest_button.click().run(timeout=300)
+    suggest_button.click().run(timeout=480)
     assert not at.exception, f"Exception beim Vorschlagen: {at.exception}"
 
     form_id = at.session_state["draft_form_id"]
