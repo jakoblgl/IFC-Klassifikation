@@ -62,7 +62,7 @@ In der Seitenleiste unter "LLM-Backend" lässt sich zwischen zwei Backends
 umschalten:
 
 - **Ollama (lokal)** – Standard, kostenlos, läuft komplett offline (siehe
-  Datenschutz oben). Spürbar langsamer, siehe vorheriger Abschnitt.
+  Datenschutz oben).
 - **Claude API (Cloud)** – erfordert einen eigenen Anthropic-API-Key (Feld
   erscheint nach der Auswahl). Vermutlich deutlich schneller (noch nicht getestet), 
   aber die Attributwerte der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen.
@@ -108,9 +108,8 @@ vorsorglich derselbe konservative Standardwert.
 
 **Anpassbar in `src/llm_client.py`**: `RECOMMENDED_MAX_WORKERS` als
 Klassenattribut bei `OllamaClient` bzw. `ClaudeClient`, jeweils getrennt
-einstellbar. Nicht blind hochsetzen – am besten wie beim ursprünglichen Test
-selbst messen (sequentiell vs. parallel mit unterschiedlichen Werten
-timen): ein zu hoher Wert kann bei begrenztem Arbeitsspeicher/VRAM eher
+einstellbar. Nicht blind hochsetzen. Am besten wie beim ursprünglichen Test
+selbst messen. Ein zu hoher Wert kann bei begrenztem Arbeitsspeicher/VRAM eher
 ausbremsen als beschleunigen.
 
 ## Problembehebung
