@@ -5,8 +5,7 @@ Lokales Tool zur automatisierten Klassifikation von Bauteilen aus IFC-Modellen
 tragend?" oder "aus welchem Material besteht der Träger?". Die Einordnung
 übernimmt ein Sprachmodell (LLM), das die relevanten IFC-Attribute eines
 Bauteils gegen die gewählten Zielkategorien abgleicht. Teil einer
-Masterarbeit; die eigentliche Klassifikationslogik ist in `src/` beschrieben,
-diese Oberfläche ist reine Präsentationsschicht.
+Masterarbeit, die eigentliche Klassifikationslogik ist in `src/` beschrieben.
 
 ## Herunterladen
 
