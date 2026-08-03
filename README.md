@@ -37,24 +37,6 @@ lokale Python-Umgebung eingerichtet (kann ein paar Minuten dauern), danach
 öffnet sich das Tool in einem eigenen Fenster. Es ist keine weitere Software
 nötig außer Python und Ollama.
 
-## Datenschutz
-
-**Mit dem Standard-Backend Ollama** läuft das Tool ausschließlich lokal auf
-diesem Rechner (Server nur auf 127.0.0.1) – IFC-Dateien werden nur von der
-Festplatte gelesen, nichts wird hochgeladen. Die Klassifikation selbst läuft
-komplett offline über das lokal installierte Ollama-Modell. Einzige
-Ausnahme: eine optionale Anreicherung mit Definitionen aus dem buildingSMART
-Data Dictionary (bSDD) beim "Attributpfade vorschlagen lassen" – dabei wird
-nur ein generischer Klassenname wie `IfcWall` übertragen, keine Projekt-
-oder Bauteildaten. Ist bSDD nicht erreichbar, funktioniert das Tool
-unverändert weiter.
-
-**Wird stattdessen das Cloud-Backend Claude API gewählt** (siehe
-"LLM-Backend" unten), gilt das oben Gesagte nicht mehr: dann werden die
-tatsächlichen Attributwerte der zu klassifizierenden Bauteile an die
-Anthropic-API übertragen. Für Projekte mit entsprechenden
-Datenschutzanforderungen bleibt Ollama die vorgesehene Wahl.
-
 ## Bedienung – kurzer Ablauf
 
 1. **IFC-Datei(en) auswählen** – eine oder mehrere `.ifc`-Dateien von der
@@ -74,19 +56,6 @@ Eigene Zusammenstellungen von Anwendungsfällen lassen sich in der
 Seitenleiste unter "Projekt" für spätere Sitzungen speichern und wieder
 laden.
 
-## Warum dauert die Klassifikation manchmal lange?
-
-Für jede *einzigartige* Kombination der konfigurierten Attributwerte macht
-das Tool einen eigenen Aufruf an das LLM (nicht pro Bauteil-Instanz, aber
-z.B. bei 40 unterschiedlichen Attribut-Kombinationen entsprechend 40
-Aufrufe). Das lokale Modell läuft ohne dedizierte GPU spürbar langsamer als
-eine Cloud-API. Bei vielen unterschiedlichen Kombinationen kann ein einziger
-Anwendungsfall daher durchaus mehrere Minuten dauern.
-
-Diese Aufrufe laufen dabei zu zweit gleichzeitig statt strikt nacheinander
-(unabhängige Einzelanfragen, kein gemeinsamer Prompt – das würde die
-Genauigkeit verschlechtern, siehe Kommentar in `classify_generic_v3.py`).
-
 ## LLM-Backend wählen: Ollama oder Claude API
 
 In der Seitenleiste unter "LLM-Backend" lässt sich zwischen zwei Backends
@@ -100,6 +69,37 @@ umschalten:
   Für Projekte mit entsprechenden Datenschutzanforderungen bleibt Ollama
   die vorgesehene Wahl. Der Key wird nur für die laufende Sitzung im
   Arbeitsspeicher gehalten, nicht gespeichert.
+
+## Datenschutz
+
+**Mit dem Standard-Backend Ollama** läuft das Tool ausschließlich lokal auf
+diesem Rechner (Server nur auf 127.0.0.1) – IFC-Dateien werden nur von der
+Festplatte gelesen, nichts wird hochgeladen. Die Klassifikation selbst läuft
+komplett offline über das lokal installierte Ollama-Modell. Einzige
+Ausnahme: eine optionale Anreicherung mit Definitionen aus dem buildingSMART
+Data Dictionary (bSDD) beim "Attributpfade vorschlagen lassen" – dabei wird
+nur ein generischer Klassenname wie `IfcWall` übertragen, keine Projekt-
+oder Bauteildaten. Ist bSDD nicht erreichbar, funktioniert das Tool
+unverändert weiter.
+
+**Wird stattdessen das Cloud-Backend Claude API gewählt** (siehe
+"LLM-Backend"), gilt das oben Gesagte nicht mehr: dann werden die
+tatsächlichen Attributwerte der zu klassifizierenden Bauteile an die
+Anthropic-API übertragen. Für Projekte mit entsprechenden
+Datenschutzanforderungen bleibt Ollama die vorgesehene Wahl.
+
+## Warum dauert die Klassifikation manchmal lange?
+
+Für jede *einzigartige* Kombination der konfigurierten Attributwerte macht
+das Tool einen eigenen Aufruf an das LLM (nicht pro Bauteil-Instanz, aber
+z.B. bei 40 unterschiedlichen Attribut-Kombinationen entsprechend 40
+Aufrufe). Das lokale Modell läuft ohne dedizierte GPU spürbar langsamer als
+eine Cloud-API. Bei vielen unterschiedlichen Kombinationen kann ein einziger
+Anwendungsfall daher durchaus mehrere Minuten dauern.
+
+Diese Aufrufe laufen dabei zu zweit gleichzeitig statt strikt nacheinander
+(unabhängige Einzelanfragen, kein gemeinsamer Prompt – das würde die
+Genauigkeit verschlechtern, siehe Kommentar in `classify_generic_v3.py`).
 
 ## Problembehebung
 
