@@ -17,7 +17,7 @@ Masterarbeit, die eigentliche Klassifikationslogik ist in `src/` beschrieben.
 
 - Windows
 - Python 3.9 (wird beim ersten Start automatisch als lokale Umgebung
-  eingerichtet, falls der `py`-Launcher verfügbar ist – sonst vorher von
+  eingerichtet, falls der `py`-Launcher verfügbar ist. Sonst vorher von
   https://www.python.org/downloads/ installieren)
 - Für das Standard-Backend Ollama – das lokale, kostenlose Sprachmodell, mit
   dem klassifiziert wird:
@@ -61,13 +61,11 @@ In der Seitenleiste unter "LLM-Backend" lässt sich zwischen zwei Backends
 umschalten:
 
 - **Ollama (lokal)** – Standard, kostenlos, läuft komplett offline (siehe
-  Datenschutz oben).
-- **Claude API (Cloud)** – erfordert einen eigenen Anthropic-API-Key (Feld
-  erscheint nach der Auswahl). Vermutlich deutlich schneller (noch nicht getestet), 
-  aber die Attributwerte der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen.
-  Für Projekte mit entsprechenden Datenschutzanforderungen bleibt Ollama
-  die vorgesehene Wahl. Der Key wird nur für die laufende Sitzung im
-  Arbeitsspeicher gehalten, nicht gespeichert.
+  Datenschutz).
+- **Claude API (Cloud)** – erfordert einen eigenen Anthropic-API-Key. 
+  Vermutlich deutlich schneller (noch nicht getestet), aber die Attributwerte 
+  der klassifizierten Bauteile werden dafür an die Anthropic-API übertragen.
+  Der Key wird nur für die laufende Sitzung im Arbeitsspeicher gehalten, nicht gespeichert.
 
 ## Datenschutz
 
@@ -75,11 +73,11 @@ umschalten:
 (Server nur auf 127.0.0.1). IFC-Dateien werden nur von der
 Festplatte gelesen, nichts wird hochgeladen. Die Klassifikation selbst läuft
 komplett offline über das lokal installierte Ollama-Modell. Einzige
-Ausnahme: eine optionale Anreicherung mit Definitionen aus dem buildingSMART
-Data Dictionary (bSDD) beim "Attributpfade vorschlagen lassen". dabei wird
+Ausnahme: eine Anreicherung mit Definitionen aus dem buildingSMART
+Data Dictionary (bSDD) beim optionalen "Attributpfade vorschlagen lassen". dabei wird
 nur ein generischer Klassenname wie `IfcWall` übertragen, keine Projekt-
 oder Bauteildaten. Ist bSDD nicht erreichbar, funktioniert das Tool
-unverändert weiter.
+trotzdem weiter.
 
 **Wird stattdessen das Cloud-Backend Claude API gewählt** (siehe
 "LLM-Backend"), werden die tatsächlichen Attributwerte der zu klassifizierenden 
@@ -92,14 +90,14 @@ Für jede *einzigartige* Kombination der konfigurierten Attributwerte macht
 das Tool einen eigenen Aufruf an das LLM (nicht pro Bauteil-Instanz, aber
 z.B. bei 40 unterschiedlichen Attributwerte-Kombinationen entsprechend 40
 Aufrufe). Bei vielen unterschiedlichen Kombinationen kann ein einziger
-Anwendungsfall daher durchaus mehrere Minuten dauern – besonders mit dem
+Anwendungsfall daher durchaus mehrere Minuten dauern, besonders mit dem
 lokalen Ollama-Modell ohne dedizierte GPU.
 
 Diese Aufrufe laufen dabei standardmäßig zu zweit gleichzeitig statt strikt
-nacheinander (unabhängige Einzelanfragen, kein gemeinsamer Prompt – das
+nacheinander (unabhängige Einzelanfragen, kein gemeinsamer Prompt, das
 würde die Genauigkeit verschlechtern, siehe Kommentar in
 `classify_generic_v3.py`). Dieser Wert (2) ist für das lokale Ollama-Backend
-empirisch auf einem Testsystem ohne dedizierte GPU ermittelt worden – auf
+auf einem Testsystem ohne dedizierte GPU ermittelt worden. Auf
 leistungsfähigerer Hardware (v.a. mit GPU) kann ein höherer Wert schneller
 sein. Für die Cloud-API Claude wurde noch kein optimaler Wert ermittelt
 (hängt vom eigenen Anthropic-Account-Tier/Rate-Limit ab). Hier gilt
@@ -125,7 +123,7 @@ abgestürzt. Ollama neu starten und den betroffenen Anwendungsfall erneut
 klassifizieren.
 
 **Die Oberfläche reagiert lange nicht / bleibt bei "Klassifiziere …"
-stehen**: bei vielen Attribut-Kombinationen normal (siehe oben) – nicht
+stehen**: bei vielen Attribut-Kombinationen normal (siehe oben), nicht
 abbrechen.
 
 ## Aufbau des Repositories (für Entwickler)
