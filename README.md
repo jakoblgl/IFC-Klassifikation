@@ -55,7 +55,7 @@ funktioniert das Tool unverändert weiter.
    **Das kann je nach Anzahl unterschiedlicher Attribut-Kombinationen mehrere
    Minuten dauern**.
 4. **Ergebnis** – Tabelle ansehen, als CSV oder als um die Klassifikation
-   angereicherte IFC-Datei speichern bzw. herunterladen.
+   angereicherte IFC-Datei in einem frei wählbaren Zielordner speichern.
 
 Eigene Zusammenstellungen von Anwendungsfällen lassen sich in der
 Seitenleiste unter "Projekt" für spätere Sitzungen speichern und wieder
@@ -112,8 +112,5 @@ abbrechen.
   `attribute_diagnostics.py`, `bsdd_client.py`, `llm_client.py`,
   `export_output.py` – die in der Masterarbeit beschriebenen
   Klassifikationsmodule
-- `data/` – Test-IFC-Dateien und die vom Programm genutzten
-  Anwendungsfall-Presets
-- `tests/` – automatisierte Tests, ausführen mit
-  `.venv\Scripts\python.exe tests\test_gui_app.py` bzw.
-  `tests\test_classify_generic_v3.py`
+- `data/` – die vom Programm genutzten Anwendungsfall-Presets (werden über
+  "Vorlage übernehmen" angeboten)
