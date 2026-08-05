@@ -3,18 +3,17 @@ Kardinalitaets-Diagnose fuer konfigurierte Attributpfade.
 
 Hintergrund: schema_extraction.extract_schema_context_multi kappt die
 Beispielwerte je Pfad auf 8 (siehe dortiger Docstring) - ein Pfad mit 9
-unterschiedlichen Werten sieht danach identisch aus wie einer mit 9000. Die
-bestehende Vorschlags-Heuristik (classify_dynamic.prefilter_schema_context)
-arbeitet auf genau dieser gekappten Liste und kann daher hochkardinale
-Pfade (z.B. Positionsnummern/IDs, die pro Instanz praktisch einzigartig
-sind) nicht zuverlaessig erkennen.
-
-Dieses Modul rechnet stattdessen direkt gegen die vollstaendigen,
-ungekappten per_instance-Daten - kein LLM-Aufruf, nur Zaehlen. Zweck: dem
-Nutzer vor der Klassifikation zeigen, welche der konfigurierten
-Attributpfade das Lookup-once-Prinzip (ein Aufruf pro einzigartiger
-Kombination statt pro Instanz, siehe classify_generic.py) gefaehrden,
-weil sie die Anzahl der Kombinationen unverhaeltnismaessig stark erhoehen.
+unterschiedlichen Werten sieht danach identisch aus wie einer mit 9000.
+path_cardinality() rechnet stattdessen direkt gegen die vollstaendigen,
+ungekappten per_instance-Daten - kein LLM-Aufruf, nur Zaehlen. Wird sowohl
+von classify_dynamic.prefilter_schema_context genutzt (Vorfilterung der
+LLM-Kandidaten nach tatsaechlicher Abdeckung statt nach der gekappten
+Beispielwerte-Liste, damit hochkardinale, aber wenig populierte Pfade
+nicht bevorzugt werden) als auch hier direkt, um dem Nutzer vor der
+Klassifikation zu zeigen, welche der konfigurierten Attributpfade das
+Lookup-once-Prinzip (ein Aufruf pro einzigartiger Kombination statt pro
+Instanz, siehe classify_generic.py) gefaehrden, weil sie die Anzahl der
+Kombinationen unverhaeltnismaessig stark erhoehen.
 """
 from classify_generic import extract_combinations, MISSING
 

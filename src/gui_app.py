@@ -976,8 +976,15 @@ if st.session_state.get("ifc_paths"):
                             # abzustuerzen, der Vorschlag funktioniert dann
                             # wie zuvor rein aus dem Schema-Kontext.
                             merged_bsdd.update(get_bsdd_properties(sc))
+                        # Wird sowohl fuer die coverage-basierte Vorfilterung der
+                        # LLM-Kandidaten (siehe suggest_attribute_paths/
+                        # prefilter_schema_context) als auch weiter unten fuer
+                        # trim_redundant_paths gebraucht - get_schema ist
+                        # bereits pro Klasse gecacht, daher keine doppelte
+                        # Berechnung durch den frueheren Aufrufzeitpunkt.
+                        per_instance_by_class = [get_schema(sc)[0] for sc in seed_classes]
                         suggested = suggest_attribute_paths(
-                            client, merged_context, "/".join(seed_classes),
+                            client, merged_context, per_instance_by_class, "/".join(seed_classes),
                             concept, concept_question, categories_raw,
                             bsdd_properties=merged_bsdd,
                         )
@@ -986,7 +993,6 @@ if st.session_state.get("ifc_paths"):
                         # neue Instanzabdeckung bringt (siehe Docstring von
                         # trim_redundant_paths) - deshalb hier deterministisch
                         # nachtraeglich kuerzen, ohne weiteren LLM-Aufruf.
-                        per_instance_by_class = [get_schema(sc)[0] for sc in seed_classes]
                         trim_result = trim_redundant_paths(suggested, per_instance_by_class)
                         suggested = trim_result["kept"]
                     # Wie bei "_project_just_saved": eine Meldung direkt vor

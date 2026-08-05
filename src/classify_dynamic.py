@@ -15,6 +15,8 @@ hunderte Schema-Pfade selbst durchsuchen muss.
 import json
 import re
 
+from attribute_diagnostics import path_cardinality
+
 
 LOCALIZATION_MULTI_PROMPT = """Du bekommst den vollstaendigen Schema-Kontext (alle beobachteten
 Attributpfade mit Beispielwerten) fuer Bauteile der Klasse {seed_class}.
@@ -75,14 +77,25 @@ def _looks_numeric(value):
         return False
 
 
-def prefilter_schema_context(schema_context, max_candidates=40):
+def prefilter_schema_context(schema_context, per_instance_by_class, max_candidates=40):
     """
     Billiger Vorfilter vor dem eigentlichen LLM-Aufruf (kein LLM-Call, nur
-    Heuristik): entfernt Pfade, deren Beispielwerte durchgehend rein
+    Zaehlen): entfernt Pfade, deren Beispielwerte durchgehend rein
     numerisch sind (Masse, Koordinaten, Gewichte etc.) - fuer
     Typ-/Kategorie-Konzepte unwahrscheinlich relevant. Reduziert grosse
     Schema-Kontexte (hier: 330 -> handhabbare Kandidatenmenge), damit der
     nachfolgende LLM-Aufruf mit vertretbarer Kontextgroesse laeuft.
+
+    Die verbleibenden Kandidaten werden nach tatsaechlicher Abdeckung
+    (n_populated ueber ALLE Instanzen, siehe attribute_diagnostics.
+    path_cardinality) priorisiert, nicht nach der Anzahl unterschiedlicher
+    Beispielwerte in schema_context - letztere ist auf 8 gekappt (siehe
+    schema_extraction.extract_schema_context_multi) und hat keinen
+    verlaesslichen Bezug zur Abdeckung: ein Pfad mit nur einer Handvoll
+    populierter Instanzen kann zufaellig genauso viele (gekappte)
+    Beispielwerte zeigen wie einer mit hunderten. Die Coverage-Zaehlung
+    selbst ist reines Durchzaehlen bereits vorliegender Daten (keine
+    LLM-Kosten, unter einer Sekunde auch bei hunderten Pfaden/Instanzen).
     """
     candidates = {}
     for path, values in schema_context.items():
@@ -93,28 +106,31 @@ def prefilter_schema_context(schema_context, max_candidates=40):
     if len(candidates) <= max_candidates:
         return candidates
 
-    # Grobe Priorisierung: Pfade mit 2-20 unterschiedlichen Werten sind meist
-    # informativer als solche mit nur 1 (konstant) oder sehr vielen (z.B.
-    # GUID-artige Freitextfelder).
-    def score(item):
-        _, values = item
-        n = len(values)
-        return abs(n - 6)  # Praeferenz fuer ca. 6 unterschiedliche Werte
+    def n_populated(path):
+        return sum(
+            path_cardinality(per_instance, path)["n_populated"]
+            for per_instance in per_instance_by_class
+        )
 
-    ranked = sorted(candidates.items(), key=score)
+    ranked = sorted(candidates.items(), key=lambda item: n_populated(item[0]), reverse=True)
     return dict(ranked[:max_candidates])
 
 
-def suggest_attribute_paths(client, schema_context, seed_class, concept, concept_question, categories, max_paths=5,
-                             prefilter_max=40, bsdd_properties=None):
+def suggest_attribute_paths(client, schema_context, per_instance_by_class, seed_class, concept, concept_question,
+                             categories, max_paths=5, prefilter_max=40, bsdd_properties=None):
     """
+    per_instance_by_class: list[dict] - ein per_instance-Dict je betrachteter
+    Bauteilklasse (wie bei attribute_diagnostics.path_diagnostics_multi),
+    fuer die coverage-basierte Vorfilterung der Kandidaten (siehe
+    prefilter_schema_context).
+
     bsdd_properties: optional dict[path, dict(name=..., definition=...)]
     (siehe bsdd_client.get_class_properties) - autoritative Definitionen fuer
     genormte IFC-Pset-Attribute, rein optionale Anreicherung der Pfade, die
     ohnehin schon im schema_context vorkommen (kein Ersatz fuer den
     tatsaechlich beobachteten Schema-Kontext, keine neuen Pfade).
     """
-    filtered_context = prefilter_schema_context(schema_context, max_candidates=prefilter_max)
+    filtered_context = prefilter_schema_context(schema_context, per_instance_by_class, max_candidates=prefilter_max)
     bsdd_properties = bsdd_properties or {}
 
     enriched_context = {}
