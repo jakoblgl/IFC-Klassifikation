@@ -1,0 +1,18 @@
+{
+  "seed_class": "IfcSlab",
+  "concept": "Deckentyp",
+  "concept_question": "Ist das Bauteil eine Bodenplatte, eine Geschossdecke oder eine Dachflaeche?",
+  "categories": [
+    "Bodenplatte",
+    "Geschossdecke",
+    "Dachflaeche"
+  ],
+  "attribute_paths": [
+    "$.schema.Sonstige.Familie",
+    "$.schema.Tekla Common.Part mark",
+    "$.schema.Other.Family and Type",
+    "$.schema.Materials and Finishes.Structural Material",
+    "$.schema.ArchiCADProperties.Element Classification"
+  ],
+  "_comment": "Attributpfade: Basis aus der Auto-Vorschlagsfunktion (classify_dynamic.suggest_attribute_paths) gegen die vollstaendigen IFCNet-IfcSlab-Testdaten (../testdaten/ifcnet/extracted/IfcSlab/, train+test, 339 Instanzen), zusaetzlich manuell um Sonstige.Kategorie, ArchiCADProperties.Element Classification/Type und Allgemein.Bauteilklassifizierung_mum ergaenzt - diese enthalten sehr direktes Signal (z.B. Kategorie: Fundamente/Geschossdecken/Sohlen, ArchiCAD: Roof/Slab), das der Auto-Vorschlag nicht auswaehlte. Verbessert die Abdeckung von 149 auf 194 von 339 Instanzen. Danach per trim_redundant_paths auf nicht-redundante Pfade gekuerzt. Siehe Konversation vom 2026-08-05."
+}

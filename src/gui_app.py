@@ -340,6 +340,7 @@ PRESET_FILES = {
     "Tragende Funktion (Wand)": "data/usecase_tragend_gui.json",
     "Trägermaterial (Träger)": "data/usecase_traeger_filtered.json",
     "Rohrmedium (Rohr)": "data/usecase_rohrmedium.json",
+    "Deckentyp (Decke)": "data/usecase_decken.json",
 }
 
 # Vom Nutzer gespeicherte PROJEKTE: buendeln ALLE zu einem Zeitpunkt
