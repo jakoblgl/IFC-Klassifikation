@@ -25,7 +25,7 @@ import streamlit.components.v1 as components
 
 from schema_extraction import extract_schema_context_multi, extract_instance_metadata_multi
 from classify_generic import extract_combinations
-from classify_generic_v3 import extract_combinations_v3, classify_combinations_v3
+from classify_generic_v3 import extract_combinations_v3, classify_combinations_v3, split_cached, update_cache
 from classify_dynamic import suggest_attribute_paths
 from attribute_diagnostics import path_diagnostics_multi, trim_redundant_paths
 from bsdd_client import get_class_properties
@@ -381,6 +381,12 @@ def save_project_preset(name, usecases):
             "concept_question": uc["concept_question"],
             "categories": uc["categories"],
             "attribute_paths": uc["attribute_paths"],
+            # Kombination -> Kategorie/Begruendung/Basis aus frueheren
+            # Klassifikationslaeufen dieses Anwendungsfalls (siehe
+            # classify_generic_v3.split_cached/update_cache) - bei einem
+            # spaeteren Planungsstand desselben Projekts muessen dann nur
+            # neue/geaenderte Kombinationen erneut ans LLM.
+            "cache": uc.get("cache", {}),
         }
         for uc in usecases
     ]
@@ -676,6 +682,8 @@ if st.session_state.get("ifc_paths"):
                 n_instances = 0
                 n_combos = 0
                 n_free = 0
+                n_cached = 0
+                uc_cache = uc.get("cache", {})
                 for seed_class in uc["seed_classes"]:
                     per_instance, _ = get_schema(seed_class)
                     combos = extract_combinations(per_instance, uc["attribute_paths"])
@@ -683,14 +691,18 @@ if st.session_state.get("ifc_paths"):
                     for combo, keys in combos.items():
                         if any(v != "(nicht vorhanden)" for _, v in combo):
                             n_combos += 1
+                            if json.dumps(combo, ensure_ascii=False) in uc_cache:
+                                n_cached += 1
                         else:
                             n_free += len(keys)
                 uc["_n_instances"] = n_instances
                 uc["_n_combos"] = n_combos
+                uc["_n_cached"] = n_cached
                 extra = f", {n_free} ohne jegliches Signal → direkt \"unbekannt\" ohne LLM-Aufruf" if n_free else ""
+                cached_note = f" ({n_cached} davon bereits aus dem Projekt-Cache)" if n_cached else ""
                 st.caption(
                     f"{n_instances} Instanzen, {n_combos} einzigartige Kombinationen "
-                    f"→ {n_combos} LLM-Aufrufe{extra}"
+                    f"→ {n_combos - n_cached} LLM-Aufrufe{cached_note}{extra}"
                 )
             with cols[1]:
                 if st.button("Bearbeiten", key=f"editbtn_{uc['id']}"):
@@ -1099,6 +1111,22 @@ if st.session_state.get("ifc_paths"):
                     if editing_uc:
                         for u in st.session_state.usecases:
                             if u["id"] == editing_uc["id"]:
+                                # Konzept/Frage/Kategorien aendern die
+                                # Fragestellung, OHNE dass sich dadurch
+                                # zwingend die Kombination selbst aendert
+                                # (gleiche Attributpfade+Werte moeglich) -
+                                # ein alter Cache-Eintrag wuerde sonst
+                                # faelschlich weiterhin passen und
+                                # wiederverwendet. Attributpfad-Aenderungen
+                                # brauchen dagegen keine explizite
+                                # Behandlung hier, siehe split_cached-
+                                # Docstring (classify_generic_v3.py).
+                                if (
+                                    u.get("concept") != new_config["concept"]
+                                    or u.get("concept_question") != new_config["concept_question"]
+                                    or u.get("categories") != new_config["categories"]
+                                ):
+                                    u["cache"] = {}
                                 u.update(new_config)
                         st.session_state.editing_id = None
                     else:
@@ -1144,7 +1172,9 @@ elif not st.session_state.get("ifc_paths"):
     st.caption("Lade zuerst mindestens eine IFC-Datei in Schritt 1 hoch.")
 
 if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
-    total_calls = sum(uc.get("_n_combos", 0) for uc in st.session_state.usecases)
+    total_calls = sum(
+        uc.get("_n_combos", 0) - uc.get("_n_cached", 0) for uc in st.session_state.usecases
+    )
     st.info(f"Insgesamt {total_calls} LLM-Aufrufe über {len(st.session_state.usecases)} Anwendungsfall/-fälle.")
 
     if st.button("Alle Anwendungsfälle klassifizieren", type="primary"):
@@ -1166,6 +1196,7 @@ if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
             uc_classification = {}
             uc_metadata = {}
             failed = False
+            uc_cache = uc.setdefault("cache", {})
             for seed_class in uc["seed_classes"]:
                 per_instance, _ = get_schema(seed_class)
                 metadata = get_metadata(seed_class)
@@ -1185,7 +1216,20 @@ if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
                     combo_to_evidence[combo] = "Keines der konfigurierten Attribute ist im Modell gepflegt."
                     combo_to_basis[combo] = "keine"
 
-                if has_signal:
+                # Bereits aus einem frueheren Klassifikationslauf desselben
+                # Projekts bekannte Kombinationen (siehe uc["cache"]) direkt
+                # uebernehmen, nur wirklich neue/geaenderte gehen ans LLM.
+                cat_cached, ev_cached, basis_cached, to_classify = split_cached(has_signal, uc_cache)
+                combo_to_category.update(cat_cached)
+                combo_to_evidence.update(ev_cached)
+                combo_to_basis.update(basis_cached)
+                if cat_cached:
+                    st.caption(
+                        f"„{uc['concept']}“ ({seed_class}): {len(cat_cached)} Kombination(en) "
+                        f"aus dem Projekt-Cache übernommen, keine LLM-Aufrufe dafür nötig."
+                    )
+
+                if to_classify:
                     # Ein LLM-Aufruf je einzigartiger Kombination (siehe
                     # classify_combinations_v3) kann bei vielen Kombinationen
                     # mehrere Minuten dauern - ein statischer Spinner-Text gibt
@@ -1203,16 +1247,17 @@ if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
                         )
                         progress_bar.progress(done / total)
 
-                    _update_progress(0, len(has_signal))
+                    _update_progress(0, len(to_classify))
                     try:
                         cat2, ev2, basis2 = classify_combinations_v3(
-                            client, has_signal, uc["concept"], uc["concept_question"], uc["categories"],
+                            client, to_classify, uc["concept"], uc["concept_question"], uc["categories"],
                             on_progress=_update_progress,
                             max_workers=client.RECOMMENDED_MAX_WORKERS,
                         )
                         combo_to_category.update(cat2)
                         combo_to_evidence.update(ev2)
                         combo_to_basis.update(basis2)
+                        update_cache(uc_cache, cat2, ev2, basis2, to_classify)
                     except Exception as exc:
                         st.error(
                             f"Anwendungsfall „{uc['concept']}“ ({seed_class}) fehlgeschlagen: {exc}\n\nLäuft Ollama noch?"
@@ -1317,20 +1362,34 @@ if st.session_state.get("usecases") and st.session_state.get("ifc_paths"):
                     progress_bar = st.progress(0.0)
                     try:
                         combinations = extract_combinations_v3(subset, uc["attribute_paths"], names)
-
-                        def _update_progress(done, total):
-                            progress_label.text(
-                                f"Klassifiziere per Namenssuche: {done}/{total} Kombinationen..."
-                            )
-                            progress_bar.progress(done / total)
-
-                        _update_progress(0, len(combinations))
-                        combo_to_category, combo_to_evidence, combo_to_basis = classify_combinations_v3(
-                            client, combinations,
-                            uc["concept"], uc["concept_question"], uc["categories"],
-                            on_progress=_update_progress,
-                            max_workers=client.RECOMMENDED_MAX_WORKERS,
+                        uc_cache = uc.setdefault("cache", {})
+                        combo_to_category, combo_to_evidence, combo_to_basis, to_classify = split_cached(
+                            combinations, uc_cache
                         )
+                        if combo_to_category:
+                            st.caption(
+                                f"{len(combo_to_category)} Kombination(en) aus dem Projekt-Cache "
+                                f"übernommen, keine LLM-Aufrufe dafür nötig."
+                            )
+
+                        if to_classify:
+                            def _update_progress(done, total):
+                                progress_label.text(
+                                    f"Klassifiziere per Namenssuche: {done}/{total} Kombinationen..."
+                                )
+                                progress_bar.progress(done / total)
+
+                            _update_progress(0, len(to_classify))
+                            cat2, ev2, basis2 = classify_combinations_v3(
+                                client, to_classify,
+                                uc["concept"], uc["concept_question"], uc["categories"],
+                                on_progress=_update_progress,
+                                max_workers=client.RECOMMENDED_MAX_WORKERS,
+                            )
+                            combo_to_category.update(cat2)
+                            combo_to_evidence.update(ev2)
+                            combo_to_basis.update(basis2)
+                            update_cache(uc_cache, cat2, ev2, basis2, to_classify)
                     except Exception as exc:
                         st.error(f"Namenssuche fehlgeschlagen: {exc}\n\nLäuft Ollama noch?")
                         continue

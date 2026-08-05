@@ -226,6 +226,59 @@ def classify_combinations_v3(client, combinations, concept, concept_question, ca
     return combo_to_category, combo_to_evidence, combo_to_basis
 
 
+def _cache_key(combo):
+    return json.dumps(combo, ensure_ascii=False)
+
+
+def split_cached(combinations, cache):
+    """
+    Teilt combinations (dict[combo, keys]) anhand von cache
+    (dict[json-serialisierter combo-string, dict(category, evidence, basis)])
+    in bereits bekannte Ergebnisse und noch zu klassifizierende Kombinationen.
+
+    Der Cache-Schluessel ist bewusst die Kombination selbst (nicht z.B. ein
+    Fingerabdruck aus Konzept/Kategorien/Attributpfaden): aendern sich die
+    Attributpfade eines Anwendungsfalls, aendert sich damit automatisch auch
+    die Form jeder Kombination - alte Eintraege passen dann schlicht nicht
+    mehr und werden nie faelschlich wiederverwendet, ganz ohne separate
+    Invalidierungslogik. Aendern sich dagegen Konzept/Frage/Kategorien OHNE
+    dass sich die Attributpfade aendern, bleibt die Kombination gleich - das
+    muss darum an der Stelle, an der ein Anwendungsfall bearbeitet wird,
+    separat behandelt werden (siehe gui_app.py, Cache wird dort bei einer
+    solchen Aenderung komplett geleert).
+
+    Returns:
+        (combo_to_category, combo_to_evidence, combo_to_basis, to_classify)
+        Die ersten drei dicts enthalten NUR die aus dem Cache uebernommenen
+        Eintraege, to_classify (dict[combo, keys], wie combinations selbst)
+        die restlichen, noch ans LLM zu schickenden Kombinationen.
+    """
+    combo_to_category = {}
+    combo_to_evidence = {}
+    combo_to_basis = {}
+    to_classify = {}
+    for combo, keys in combinations.items():
+        cached = cache.get(_cache_key(combo))
+        if cached is not None:
+            combo_to_category[combo] = cached["category"]
+            combo_to_evidence[combo] = cached.get("evidence", "")
+            combo_to_basis[combo] = cached.get("basis", "")
+        else:
+            to_classify[combo] = keys
+    return combo_to_category, combo_to_evidence, combo_to_basis, to_classify
+
+
+def update_cache(cache, combo_to_category, combo_to_evidence, combo_to_basis, combos):
+    """Ergaenzt cache IN-PLACE um die frisch klassifizierten combos (z.B. das
+    to_classify-Ergebnis von split_cached, nachdem es klassifiziert wurde)."""
+    for combo in combos:
+        cache[_cache_key(combo)] = {
+            "category": combo_to_category[combo],
+            "evidence": combo_to_evidence.get(combo, ""),
+            "basis": combo_to_basis.get(combo, ""),
+        }
+
+
 def run_generic_classification_v3(client, per_instance, names, usecase_config):
     attribute_paths = usecase_config["attribute_paths"]
     combinations = extract_combinations_v3(per_instance, attribute_paths, names)
