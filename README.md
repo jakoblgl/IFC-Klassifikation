@@ -16,9 +16,9 @@ Masterarbeit, die eigentliche Klassifikationslogik ist in `src/` beschrieben.
 ## Voraussetzungen
 
 - Windows
-- Python 3.9 (wird beim ersten Start automatisch als lokale Umgebung
+- Python 3.11 (wird beim ersten Start automatisch als lokale Umgebung
   eingerichtet, falls der `py`-Launcher verfügbar ist. Sonst vorher von
-  https://www.python.org/downloads/ installieren)
+  https://www.python.org/downloads/release/python-3119/ installieren)
 - Für das Standard-Backend Ollama – das lokale, kostenlose Sprachmodell, mit
   dem klassifiziert wird:
   1. Installieren: https://ollama.com/download
