@@ -750,9 +750,16 @@ if st.session_state.get("ifc_paths"):
             categories = list(preset["categories"])
             if "unbekannt" not in categories:
                 categories.append("unbekannt")
+            # "seed_class" ist bei den meisten Presets ein einzelner String,
+            # kann aber auch eine Liste sein (z.B. Rohrmedium: IfcPipeSegment
+            # UND IfcFlowSegment, da IFC2X3-Exporte Rohre haeufig noch als
+            # generisches IfcFlowSegment ablegen - IfcPipeSegment gibt es erst
+            # ab IFC4).
+            preset_seed_class = preset["seed_class"]
+            seed_classes = preset_seed_class if isinstance(preset_seed_class, list) else [preset_seed_class]
             st.session_state.usecases.append({
                 "id": str(uuid.uuid4()),
-                "seed_classes": [preset["seed_class"]],
+                "seed_classes": seed_classes,
                 "concept": preset["concept"],
                 "concept_question": preset["concept_question"],
                 "categories": categories,

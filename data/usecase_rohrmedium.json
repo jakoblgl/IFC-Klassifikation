@@ -1,5 +1,5 @@
 {
-  "seed_class": "IfcPipeSegment",
+  "seed_class": ["IfcPipeSegment", "IfcFlowSegment"],
   "concept": "Rohrmedium",
   "concept_question": "Welches Medium fliesst durch dieses Rohr: Warmwasser, Kaltwasser oder Abwasser?",
   "categories": ["Warmwasser", "Kaltwasser", "Abwasser"],
@@ -10,5 +10,5 @@
     "$.schema.SAN Rohre.Routing",
     "$.schema.Pset_DistributionFlowElementCommon.Reference"
   ],
-  "_comment": "Attributpfade stammen aus der Auto-Vorschlagsfunktion (classify_dynamic.suggest_attribute_paths) gegen data/test_pipes_ifcnet.ifc, nicht von Hand vorgegeben - siehe Konversation vom 2026-07-29."
+  "_comment": "Attributpfade stammen aus der Auto-Vorschlagsfunktion (classify_dynamic.suggest_attribute_paths) gegen data/test_pipes_ifcnet.ifc, nicht von Hand vorgegeben - siehe Konversation vom 2026-07-29. seed_class als Liste (2026-08-06): IFC2X3-Exporte legen Rohre haeufig noch als generisches IfcFlowSegment ab, IfcPipeSegment als eigene Klasse gibt es erst ab IFC4 - ohne IfcFlowSegment findet das Preset auf solchen Dateien keine einzige Instanz (siehe volle IFCNet-Rohdaten, 647 von 649 Dateien betroffen)."
 }
